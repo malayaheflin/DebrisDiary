@@ -4,56 +4,49 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private CharacterController controller;
-    public float speed = 12f;
-    public float gravity = -9.81f * 2;
-    public float jumpHeight = 3f;
+    private float horizontal;
+    private float speed = 8f;
+    private float jumpingPower = 16f;
+    private bool isFacingRight = true;
 
-    public Transform groundCheck;
-    public float groundDistance = 0.4f;
-    public LayerMask groundMask;
+    [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private LayerMask groundLayer;
 
-    Vector3 velocity;
-
-    bool isGrounded;
-    bool isMoving;
-
-    private Vector3 lastPosition = new Vector3(0f, 0f, 0f);
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        controller = GetComponent<CharacterController>();
-    }
-
-    // Update is called once per frame
     void Update()
     {
-        //Ground Check
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-        if(isGrounded && velocity.y < 0){
-            velocity.y = -2f;
+        transform.rotation = Quaternion.identity;
+        horizontal = Input.GetAxisRaw("Horizontal");
+
+        if(Input.GetButtonDown("Jump") && IsGrounded())
+        {
+            Debug.Log("jump");
+            rb.velocity = new Vector2(rb.velocity.x, jumpingPower);
         }
-
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
-
-        Vector3 move = transform.right * x + transform.forward * z; // (right - red axis, forward - blue axis)
-
-        controller.Move(move * speed * Time.deltaTime);
-
-        if(Input.GetButtonDown("Jump") && isGrounded){
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        if(Input.GetButtonDown("Jump") && rb.velocity.y > 0f)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
         }
-       velocity.y += gravity * Time.deltaTime;
-
-       controller.Move(velocity * Time.deltaTime);
-       if(lastPosition != gameObject.transform.position && isGrounded == true){
-        isMoving = true;
-       } else {
-        isMoving = false;
-       }
-        lastPosition = gameObject.transform.position;
-
+        Flip();
     }
+    private void FixedUpdate()
+    {
+        rb.velocity = new Vector2(horizontal * speed, rb.velocity.y);
+    }
+    private bool IsGrounded()
+    {
+        return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+    }
+    
+    private void Flip()
+    {
+        if(isFacingRight && horizontal < 0f || !isFacingRight && horizontal > 0f)
+        {
+            isFacingRight = !isFacingRight;
+            Vector3 localScale = transform.localScale;
+            localScale.x *= -1f;
+            transform.localScale = localScale;
+        }
+    }
+
 }
