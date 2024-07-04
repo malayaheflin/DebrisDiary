@@ -13,7 +13,10 @@ public class Bullet : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D hitInfo)
     {
-        Debug.Log(hitInfo.name);
-        Destroy(gameObject);
+        if(!hitInfo.gameObject.CompareTag("Player"))
+        {
+            Debug.Log(hitInfo.name);
+            Destroy(gameObject);
+        }
     }
 }
